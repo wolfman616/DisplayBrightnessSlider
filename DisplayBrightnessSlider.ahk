@@ -4,18 +4,27 @@
 #notrayicon
 #persistent
 #SingleInstance force
+
+#include C:\Script\AHK\- _ _ LiB\GDI+_All.ahk
+
 setWorkingDir %a_scriptDir%
 detecthiddenwindows,on
 setbatchlines,-1
 sendMode,Input
 gosub,Varz
 
+pToken:= Gdip_Startup()
 Moonpic:= b64_2_hBitmap(moon4864)
 ico_hBmp:= b64_2_hicon(sun2464)
 Sunpic:= b64_2_hBitmap(sun4864)
 
-sl_X:= a_screenwidth-352 ; top right ;
-sl_Y:= 69
+E:= winexist("ahk_Class Shell_TrayWnd")
+controlget,HW,hwnd,,TrayNotifyWnd1,ahk_id %E%
+wingetpos,X,Y,,H,ahk_id %HW%
+sL_W:=52, sL_H:=300, sl_X:= X+32
+sl_Y:= (y>0)? (y-h-guih-4) : y+h+4
+
+;sl_X:= a_screenwidth-352 ; top right ;sl_Y:= 69
 
 menu,Tray,Icon
 menu,Tray,Icon,% "HICON:*" ico_hBmp
@@ -63,7 +72,7 @@ Butt_Go() {
 	GuiControl, ,slide,Buddy1Sun_var
 	GuiControl, ,slide,Buddy2moon
 	1stclick:= False
-	gui,slider:show,na hide x300 y80 w52 h300
+	gui,slider:show,na hide x-300 y-80 w%sl_w% h%sL_H%
 	VarSetCapacity(rect0,16,0xff)
 	DllCall("dwmapi\DwmExtendFrameIntoClientArea","uint",_surrogate_gui,"uint",&rect0)
 	winset,style,-0x110,ahk_id %child_slider%
