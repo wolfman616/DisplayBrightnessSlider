@@ -1,12 +1,12 @@
 ﻿;Double clicking the trayicon: DisplayBrightness slider emerges from systray. MWolff2022
 ;automaticallly hiding after 3 seconds of previously hovering.
-#noEnv
+#noEnv   
 #notrayicon
 #persistent
 #SingleInstance force
 
 #include C:\Script\AHK\- _ _ LiB\GDI+_All.ahk
-
+msgbox,2,ass,asss
 setWorkingDir %a_scriptDir%
 detecthiddenwindows,on
 setbatchlines,-1
@@ -17,52 +17,53 @@ pToken:= Gdip_Startup()
 Moonpic:= b64_2_hBitmap(moon4864)
 ico_hBmp:= b64_2_hicon(sun2464)
 Sunpic:= b64_2_hBitmap(sun4864)
+gosub,trayfind ;sl_X:= a_screenwidth-352 ; top right ;sl_Y:= 69
+menu,Tray,Icon
+menu,Tray,Icon,% "HICON:*" ico_hBmp
+Time:= a_tickcount+5000
+Timer("Main",-90)
+return,
 
+TrayFind:
 E:= winexist("ahk_Class Shell_TrayWnd")
 controlget,HW,hwnd,,TrayNotifyWnd1,ahk_id %E%
 wingetpos,X,Y,,H,ahk_id %HW%
 sL_W:=52, sL_H:=300, sl_X:= X+32
 sl_Y:= (y>0)? (y-h-guih-4) : y+h+4
-
-;sl_X:= a_screenwidth-352 ; top right ;sl_Y:= 69
-
-menu,Tray,Icon
-menu,Tray,Icon,% "HICON:*" ico_hBmp
-
-Time:= a_tickcount+5000
-Timer("Main",-90)
 return,
 
 Main:
-Butt_Go()
+gosub,showme
 OnMessage(0x0200,"PointerMove")
 OnMessage(0x02A3,"PointerLeave")
-OnMessage(0x0215,"PointerLeave") ;WM_CAPTURECHANGED
+OnMessage(0x0215,"PointerLeave") ;WM_CAPTURECHANGED;
 OnMessage(0x404,"AHK_NOTIFYICON")
 return,
 
-HideMe: ;slide vertically-negative back toward top oriented taskbar
-if(isvisible(_surrogate_gui))
-	WinAnimate(_surrogate_gui,"hide slide vneg",155)
+HideMe: ;slide vertically-negative back toward top oriented taskbar;
+if(isvisible(_Surrogate_Gui))
+	WinAnimate(_Surrogate_Gui,"hide slide vneg",155)
 return,
 
-ShowMe: ;slide vertically-positive emerging from top oriented taskbar
-if(!isvisible(_surrogate_gui))
-	WinAnimate(_surrogate_gui,"activate slide vpos",155)
+ShowMe: ;slide vertically-positive emerging from top oriented taskbar;
+Butt_Go()
+gosub,TrayFind
+if(!isvisible(_Surrogate_Gui))
+	WinAnimate(_Surrogate_Gui,"activate slide vpos",155)
 return,
 
-PointerMove() { ;start 30 sec timeout
+PointerMove() { ;start 30 sec timeout;
 	setTimer,hideme,-30000
 }
 
-PointerLeave() { ;start 3 sec timeout
+PointerLeave() { ;start 3 sec timeout;
 	settimer,hideme,-3000
 }
 
 Butt_Go() {
 	global
 	(!Adopted? Adopted:= True)
-	gui,slider:New,-DPIScale +AlwaysOnTop +toolwindow +hWnd_surrogate_gui -Caption
+	gui,slider:New,-DPIScale +AlwaysOnTop +toolwindow +hWnd_Surrogate_Gui -Caption
 	gui,slider:+LastFound -Caption ;+E0x80000
 	try,curr:= DisplayBrightness_get()
 	gui,slider:Add,picture,x-2 y0 h48 w48 +hWndsunhandle gSun_label vSun_var,% "HBITMAP:*" Sunpic
@@ -74,19 +75,18 @@ Butt_Go() {
 	1stclick:= False
 	gui,slider:show,na hide x-300 y-80 w%sl_w% h%sL_H%
 	VarSetCapacity(rect0,16,0xff)
-	DllCall("dwmapi\DwmExtendFrameIntoClientArea","uint",_surrogate_gui,"uint",&rect0)
+	DllCall("dwmapi\DwmExtendFrameIntoClientArea","uint",_Surrogate_Gui,"uint",&rect0)
 	winset,style,-0x110,ahk_id %child_slider%
 	winset,exstyle,+0xc8,ahk_id %child_slider%
 	winset,exstyle,+0xc8,ahk_id %sunhandle%
 	winset,exstyle,+0xc8,ahk_id %moonhandle%
 	winset,exstyle,+0xc8,ahk_id %Parent_hwnd%
 	gui,slider:+LastFound -Caption %istopmost% ;+E0x80000
-	winset,alwaysontop,on,ahk_id %_surrogate_gui%
+	winset,alwaysontop,on,ahk_id %_Surrogate_Gui%
 	Win_Move(Child_slider,-2,48,60,SliderH-10)
-	Win_Move(_surrogate_gui, sl_x, sl_y,"","")
-	winset,style,-0x80000000,ahk_id %_surrogate_gui%
-	winset,style,+0x40000000,ahk_id %_surrogate_gui%
-	gosub,ShowMe
+	Win_Move(_Surrogate_Gui, sl_x, sl_y,"","")
+	winset,style,-0x80000000,ahk_id %_Surrogate_Gui%
+	winset,style,+0x40000000,ahk_id %_Surrogate_Gui%
 	return,
 }
 
@@ -123,6 +123,7 @@ if(!curr) {
 	settimer,ToolOff,-1000
 	settimer,ttdone,-1200
 } return,
+
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -148,9 +149,9 @@ if parent_control_handle {
 
 adopt() {
 	global
-	DllCall("SetParent","uint",child_slider,"uint",_surrogate_gui)
-	DllCall("SetParent","uint",sunhandle,"uint",_surrogate_gui)
-	DllCall("SetParent","uint",moonhandle,"uint",_surrogate_gui)
+	DllCall("SetParent","uint",child_slider,"uint",_Surrogate_Gui)
+	DllCall("SetParent","uint",sunhandle,"uint",_Surrogate_Gui)
+	DllCall("SetParent","uint",moonhandle,"uint",_Surrogate_Gui)
 }
 
 ToolOff:
@@ -171,7 +172,7 @@ IsVisible(hWnd) {
 AHK_NOTIFYICON(wParam, lParam) { ; 0x201: ; WM_LButtonDOWN   ; 0x202:; WM_LButtonUP
 	listlines,off
 	Switch,lParam {
-		case,0x203: if(!IsVisible(_surrogate_gui)) {
+		case,0x203: if(!IsVisible(_Surrogate_Gui)) {
 				winget,id,id,ahk_class NotifyIconOverflowWindow
 			if(IsVisible(id))
 				winclose,ahk_id %id%
@@ -192,7 +193,7 @@ tt0n:= false
 return,
 
 varz:
-global Parent_hWnd, exStyles, _surrogate_gui, child_slider_var, HPMON, HMON, curr, slideold, dbgtt, tt0n, STARTPOS, sun, Sun_var, sunhandle, moon, moonn, moonhandle, adopted, ParentX, ParentY, moonY, SliderH, sl_x, sl_y
+global Parent_hWnd, exStyles, _Surrogate_Gui, child_slider_var, HPMON, HMON, curr, slideold, dbgtt, tt0n, STARTPOS, sun, Sun_var, sunhandle, moon, moonn, moonhandle, adopted, ParentX, ParentY, moonY, SliderH, sl_x, sl_y
 , sun:= "sun_48_3.png", moon:= "Moon_48.png", moon2:= "MOONCHEESE2.png", dbgtt:= True ;| (ws_ex_trans:= 0x20) ; | (WS_EX_LAYERED := 0x80000)  ;| (WS_EX_COMPOSITED := 0x02000000) |
 ; global time
 , SliderH:= 144, ParentX:= 3575, ParentY:= 865, istopmost:= "+alwaysontop",sun2464,sun4864,moon4864
